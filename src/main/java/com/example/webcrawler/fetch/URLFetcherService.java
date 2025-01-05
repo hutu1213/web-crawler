@@ -1,18 +1,17 @@
 package com.example.webcrawler.fetch;
 
-import com.example.webcrawler.robot.RobotService;
-import com.example.webcrawler.url.UrlEntity;
 import com.example.webcrawler.queue.QueueEnum;
 import com.example.webcrawler.queue.RabbitMQService;
+import com.example.webcrawler.robot.RobotService;
 import com.example.webcrawler.s3.S3Service;
+import com.example.webcrawler.url.UrlEntity;
 import com.example.webcrawler.url.UrlEnum;
 import com.example.webcrawler.url.UrlService;
 import org.jsoup.Jsoup;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import java.net.URL;
+
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -86,7 +85,8 @@ public class URLFetcherService {
 
     private String calculateHash(String content) {
         try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            String ALGORITHM = "SHA-256";
+            MessageDigest digest = MessageDigest.getInstance(ALGORITHM);
             byte[] encodedHash = digest.digest(content.getBytes());
             StringBuilder hexString = new StringBuilder();
             for (byte b : encodedHash) {

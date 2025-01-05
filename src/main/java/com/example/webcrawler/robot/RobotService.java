@@ -4,7 +4,6 @@ import com.example.webcrawler.domain.DomainEntity;
 import com.example.webcrawler.domain.DomainService;
 import crawlercommons.robots.SimpleRobotRules;
 import crawlercommons.robots.SimpleRobotRulesParser;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 

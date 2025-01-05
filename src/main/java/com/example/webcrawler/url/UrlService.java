@@ -1,6 +1,5 @@
 package com.example.webcrawler.url;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;

@@ -17,7 +17,7 @@ public class WebCrawlerRunner implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // Khởi chạy các dịch vụ
+
         urlFetcherService.start();
         parserHTMLService.start();
 

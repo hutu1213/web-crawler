@@ -1,9 +1,9 @@
 package com.example.webcrawler.mongo;
 
 import com.mongodb.client.MongoClients;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
-import org.springframework.beans.factory.annotation.Value;
 
 @Configuration
 public class MongoConfig extends AbstractMongoClientConfiguration {

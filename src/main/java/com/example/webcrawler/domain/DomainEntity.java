@@ -1,9 +1,11 @@
 package com.example.webcrawler.domain;
 
+import lombok.Data;
 import org.springframework.data.annotation.Id;
 
 import java.time.LocalDateTime;
 
+@Data
 public class DomainEntity {
 
     @Id
@@ -17,27 +19,4 @@ public class DomainEntity {
         this.id = id;
     }
 
-    public String getRobots() {
-        return robots;
-    }
-
-    public void setRobots(String robots) {
-        this.robots = robots;
-    }
-
-    public LocalDateTime getLastCrawlTime() {
-        return lastCrawlTime;
-    }
-
-    public void setLastCrawlTime(LocalDateTime lastCrawlTime) {
-        this.lastCrawlTime = lastCrawlTime;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
 }

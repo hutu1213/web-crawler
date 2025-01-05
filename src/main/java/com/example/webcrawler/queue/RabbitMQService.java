@@ -25,14 +25,13 @@ public class RabbitMQService implements AutoCloseable{
         connection = factory.newConnection();
         channel = connection.createChannel();
 
-        // Declare DLQs and main queues with DLX (Dead Letter Exchange)
         declareQueueWithDLX(QueueEnum.Name.FRONTIER_QUEUE);
         declareQueueWithDLX(QueueEnum.Name.PARSING_QUEUE);
     }
 
     private void declareQueueWithDLX(QueueEnum.Name queueName) throws Exception {
         String mainQueue = queueName.getQueueName();
-        String dlqQueue = mainQueue + DLX_SUFFIX;  // DLQ name with a suffix
+        String dlqQueue = mainQueue + DLX_SUFFIX;
 
         // Declare DLQ
         channel.queueDeclare(dlqQueue, true, false, false, null);

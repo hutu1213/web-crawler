@@ -1,15 +1,14 @@
     package com.example.webcrawler.parser;
 
-    import com.example.webcrawler.robot.RobotService;
-    import com.example.webcrawler.url.UrlEntity;
     import com.example.webcrawler.queue.QueueEnum;
     import com.example.webcrawler.queue.RabbitMQService;
+    import com.example.webcrawler.robot.RobotService;
     import com.example.webcrawler.s3.S3Service;
+    import com.example.webcrawler.url.UrlEntity;
     import com.example.webcrawler.url.UrlService;
     import org.jsoup.Jsoup;
     import org.jsoup.nodes.Document;
     import org.jsoup.nodes.Element;
-    import org.springframework.beans.factory.annotation.Autowired;
     import org.springframework.stereotype.Service;
 
     import java.nio.charset.StandardCharsets;
@@ -22,7 +21,7 @@
         private final UrlService urlService;
         private final S3Service s3Service;
         private final RobotService robotsService;
-        @Autowired
+
         public ParserHTMLService(RabbitMQService rabbitMQService, UrlService urlService, S3Service s3Service, RobotService robotsService) {
             this.rabbitMQService = rabbitMQService;
             this.urlService = urlService;
