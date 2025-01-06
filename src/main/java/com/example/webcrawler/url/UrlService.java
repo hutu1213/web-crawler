@@ -17,8 +17,8 @@ public class UrlService {
     public UrlEntity saveOrUpdateUrl(String url, String s3LinkHtml, String s3TextLink, String hash) {
         UrlEntity urlEntity = urlRepository.findByUrl(url).orElse(new UrlEntity());
         urlEntity.setUrl(url);
-        urlEntity.setS3Link(s3LinkHtml);  // Đường dẫn HTML đầy đủ
-        urlEntity.setContent(s3TextLink); // Đường dẫn nội dung
+        urlEntity.setS3Link(s3LinkHtml);
+        urlEntity.setContent(s3TextLink);
         urlEntity.setHash(hash);
         urlEntity.setLastCrawlTime(LocalDateTime.now());
         return urlRepository.save(urlEntity);

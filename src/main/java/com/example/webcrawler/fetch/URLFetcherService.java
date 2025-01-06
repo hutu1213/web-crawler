@@ -2,6 +2,7 @@ package com.example.webcrawler.fetch;
 
 import com.example.webcrawler.queue.QueueEnum;
 import com.example.webcrawler.queue.RabbitMQService;
+import com.example.webcrawler.redis.RateLimiterService;
 import com.example.webcrawler.robot.RobotService;
 import com.example.webcrawler.s3.S3Service;
 import com.example.webcrawler.url.UrlEntity;
@@ -23,9 +24,9 @@ public class URLFetcherService {
     private final S3Service s3Service;
     private final WebClient webClient;
     private final RobotService robotsService;
-
+    private final RateLimiterService rateLimiterService;
     public URLFetcherService(RabbitMQService rabbitMQService, UrlService urlService,
-                             S3Service s3Service,RobotService robotsService) {
+                             S3Service s3Service, RobotService robotsService, RateLimiterService rateLimiterService) {
         this.rabbitMQService = rabbitMQService;
         this.urlService = urlService;
         this.s3Service = s3Service;
@@ -34,13 +35,19 @@ public class URLFetcherService {
                 .defaultHeader(HttpHeaders.ACCEPT, "text/html,application/xhtml+xml")
                 .build();
         this.robotsService = robotsService;
+        this.rateLimiterService = rateLimiterService;
     }
 
     public void start() throws Exception {
         rabbitMQService.receiveMessages(QueueEnum.Name.FRONTIER_QUEUE, (consumerTag, delivery) -> {
             String urlString = new String(delivery.getBody(), StandardCharsets.UTF_8);
+            String domain = extractDomain(urlString);
             System.out.println("Received URL (fetcher): " + urlString);
-
+            if (!rateLimiterService.isAllowed(domain, 1)) {
+                System.out.println("Rate limit exceeded for domain: " + domain);
+                rateLimiterService.applyJitter(); // Add jitter to prevent synchronized retries
+                return;
+            }
             if (!robotsService.isAllowedToCrawl(urlString)) {
                 System.err.println("URL not allowed by robots.txt: " + urlString);
                 return;
@@ -78,7 +85,13 @@ public class URLFetcherService {
             }
         });
     }
-
+    private String extractDomain(String url) {
+        try {
+            return new java.net.URL(url).getHost();
+        } catch (Exception e) {
+            throw new RuntimeException("Invalid URL: " + url, e);
+        }
+    }
     private String stripHtmlTags(String html) {
         return Jsoup.parse(html).text();
     }
