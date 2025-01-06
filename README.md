@@ -104,6 +104,8 @@ Reference: https://www.hellointerview.com/learn/system-design/problem-breakdowns
 3. Support for additional content types (e.g., PDFs, images).
 4. Use AWS SQS instead of RabbitMQ to leverage built-in exponential backoff mechanisms.
 ---
+**References**:
+"Distributed Web Crawler", Hello Interview, [Link](https://www.hellointerview.com/learn/system-design/problem-breakdowns/web-crawler)
 
 ## License
 This project is licensed under the MIT License. See the `LICENSE` file for details.
