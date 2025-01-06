@@ -2,7 +2,6 @@
 
 A high-performance, distributed web crawler designed to efficiently crawl, index, and process web pages while adhering to domain-specific rate limits, avoiding duplicates, and respecting `robots.txt` files.
 
-Reference: https://www.hellointerview.com/learn/system-design/problem-breakdowns/web-crawler
 ---
 
 ## Features
