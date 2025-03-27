@@ -9,7 +9,9 @@ import com.example.webcrawler.url.UrlEntity;
 import com.example.webcrawler.url.UrlEnum;
 import com.example.webcrawler.url.UrlService;
 import org.jsoup.Jsoup;
+import org.springframework.context.annotation.Scope;
 import org.springframework.http.HttpHeaders;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -41,49 +43,53 @@ public class URLFetcherService {
     public void start() throws Exception {
         rabbitMQService.receiveMessages(QueueEnum.Name.FRONTIER_QUEUE, (consumerTag, delivery) -> {
             String urlString = new String(delivery.getBody(), StandardCharsets.UTF_8);
-            String domain = extractDomain(urlString);
-            System.out.println("Received URL (fetcher): " + urlString);
-            if (!rateLimiterService.isAllowed(domain, 1)) {
-                System.out.println("Rate limit exceeded for domain: " + domain);
-                rateLimiterService.applyJitter(); // Add jitter to prevent synchronized retries
-                return;
-            }
-            if (!robotsService.isAllowedToCrawl(urlString)) {
-                System.err.println("URL not allowed by robots.txt: " + urlString);
-                return;
-            }
-
-            long delay = robotsService.getCrawlDelay(urlString);
-            if (delay > 0) {
-                System.err.println("Delay by robots");
-                try {
-                    Thread.sleep(delay * 1000);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-
-            String content = fetchContent(urlString);
-            if (content != null) {
-                String hash = calculateHash(content);
-                if (urlService.isHashExists(hash)) {
-                    System.out.println("Duplicate content detected (hash exists), skipping URL: " + urlString);
-                    return;
-                }
-                String s3LinkHtml = s3Service.uploadContent(content, UrlEnum.Type.HTML.getType());
-                String strippedContent = stripHtmlTags(content);
-                String s3LinkText = s3Service.uploadContent(strippedContent, UrlEnum.Type.TEXT.getType());
-
-                UrlEntity urlEntity = urlService.saveOrUpdateUrl(urlString, s3LinkHtml, s3LinkText, hash);
-
-                try {
-                    rabbitMQService.sendMessageToQueue(QueueEnum.Name.PARSING_QUEUE, urlEntity.getId());
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
-                System.out.println("Sent URL ID to Parsing Queue: " + urlEntity.getId());
-            }
+            processUrlAsync(urlString);
         });
+    }
+    @Async("taskExecutor")
+    public void processUrlAsync(String urlString) {
+        String domain = extractDomain(urlString);
+        System.out.println("Received URL (fetcher): " + urlString);
+        if (!rateLimiterService.isAllowed(domain, 1)) {
+            System.out.println("Rate limit exceeded for domain: " + domain);
+            rateLimiterService.applyJitter();
+            return;
+        }
+        if (!robotsService.isAllowedToCrawl(urlString)) {
+            System.err.println("URL not allowed by robots.txt: " + urlString);
+            return;
+        }
+
+        long delay = robotsService.getCrawlDelay(urlString);
+        if (delay > 0) {
+            System.out.println("Delay by robots");
+            try {
+                Thread.sleep(delay * 1000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        String content = fetchContent(urlString);
+        if (content != null) {
+            String hash = calculateHash(content);
+            if (urlService.isHashExists(hash)) {
+                System.out.println("Duplicate content detected (hash exists), skipping URL: " + urlString);
+                return;
+            }
+            String s3LinkHtml = s3Service.uploadContent(content, UrlEnum.Type.HTML.getType());
+            String strippedContent = stripHtmlTags(content);
+            String s3LinkText = s3Service.uploadContent(strippedContent, UrlEnum.Type.TEXT.getType());
+
+            UrlEntity urlEntity = urlService.saveOrUpdateUrl(urlString, s3LinkHtml, s3LinkText, hash);
+
+            try {
+                rabbitMQService.sendMessageToQueue(QueueEnum.Name.PARSING_QUEUE, urlEntity.getId());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            System.out.println("Sent URL ID to Parsing Queue: " + urlEntity.getId());
+        }
     }
     private String extractDomain(String url) {
         try {

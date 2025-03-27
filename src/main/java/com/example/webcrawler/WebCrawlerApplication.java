@@ -33,8 +33,9 @@ import java.util.List;
     @Override
     public void run(String... args) throws Exception {
         List<String> rootUrls = List.of(
-//                "https://www.example.com"
-                "https://www.wikipedia.org"
+                "https://www.iana.org/"
+             //"https://www.example.com"
+   //             "https://www.wikipedia.org"
 //                "https://www.stackoverflow.com"
         );
 

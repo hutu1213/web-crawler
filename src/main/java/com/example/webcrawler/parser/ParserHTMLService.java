@@ -9,6 +9,7 @@
     import org.jsoup.Jsoup;
     import org.jsoup.nodes.Document;
     import org.jsoup.nodes.Element;
+    import org.springframework.scheduling.annotation.Async;
     import org.springframework.stereotype.Service;
 
     import java.nio.charset.StandardCharsets;
@@ -32,17 +33,20 @@
         public void start() throws Exception {
             rabbitMQService.receiveMessages(QueueEnum.Name.PARSING_QUEUE, (consumerTag, delivery) -> {
                 String idString = new String(delivery.getBody(), StandardCharsets.UTF_8);
+                processParsingAsync(idString);
+            });
+        }
+        @Async("taskExecutor")
+        public void processParsingAsync(String idString) {
+            try {
                 System.out.println("Received URL ID from PARSING_QUEUE: " + idString);
-
                 UrlEntity urlEntity = urlService.getUrlById(idString).orElse(null);
                 if (urlEntity == null) {
                     System.err.println("URL Entity not found for ID: " + idString);
                     return;
                 }
-
                 String content = s3Service.downloadContent(urlEntity.getS3Link());
                 List<String> links = extractLinksFromContent(content);
-
                 for (String link : links) {
                     try {
                         rabbitMQService.sendMessageToQueue(QueueEnum.Name.FRONTIER_QUEUE, link);
@@ -51,9 +55,11 @@
                     }
                     System.out.println("Sent URL to FRONTIER_QUEUE: " + link);
                 }
-            });
-        }
+            } catch (Exception e) {
+                System.err.println("Error processing parsing task for ID: " + idString + ". Error: " + e.getMessage());
 
+            }
+        }
 
         private List<String> extractLinksFromContent(String content) {
             List<String> links = new ArrayList<>();
